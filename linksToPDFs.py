@@ -20,13 +20,15 @@ Purpose:
 
 Current version:
       16 April 2017  - As of now, code is very sloppy and not general enough (bad reusability for anyone other than me)
-                       Desired changes:
-                       * Program should take a text file with a list of web pages on it, that it will gather links from
-                         (as of now this is hardcoded in, one link at a time)
-                       * Don't need two lists - everything could be filtered properly in one
-                       * Would be nice to output a list of all sites that could not be reached (so that client knows
-                         which sources no longer work)
-                       * Name PDFs descriptively (ex: 1_ArticleTitle.pdf or 2_HomePageName.pdf) - how do I gather this info?
+
+Desired changes:
+    1. Name PDFs descriptively (ex: 1_ArticleTitle.pdf or 2_PublisherName.pdf) 
+    2. Program should take a text file with a list of web pages on it, that it will gather links from
+       (as of now this is hardcoded in, one link at a time)
+    3. Don't need two lists - everything could be filtered properly in one
+    4. Output a list of all sites that could not be reached (so that client knows which sources no longer work)
+    5. Clean up output - maybe put gathered errors into a list to be printed at end - so that it doesn't conflict with
+        output of PDF conversion progress.
     
 '''
 ################################################################################################################################
