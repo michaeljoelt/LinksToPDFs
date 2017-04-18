@@ -121,26 +121,6 @@ def addLinksToList(site):
 	return
 # End of Function
 
-
-
-# Function: canConnect
-# Returns: boolean
-# Purpose: returns true if site can be reached
-def canConnect(site):
-	http = httplib2.Http()
-	try:
-		status, response = http.request(site)
-		'''
-		success test
-		'''
-		successList.append("canConnect SUCCESS: "+site)	
-	except:
-		errorList.append("canConnect ERROR: "+site)
-		errorList.append("   -> Site unreachable and will not become a PDF")		
-		return 0
-	return 1
-# End of Function
-
 ###############################################################################
 #                                  MAIN                                       #
 ###############################################################################
@@ -165,8 +145,7 @@ for site in startSites:
 	
 # 2. Make sourceLinks based on foundLinks, but removes all duplicate links, 
 #    links that don't start with 'http', and links containing 'agentorangegmo' 
-#[sourceLinks.append(item) for item in foundLinks if not item in sourceLinks and "http" in item and badString not in item and canConnect(item)]
-[sourceLinks.append(item) for item in foundLinks if not item in sourceLinks and "http" in item and not any(badString in item for badString in excludeStrings) and canConnect(item)]
+[sourceLinks.append(item) for item in foundLinks if not item in sourceLinks and "http" in item and not any(badString in item for badString in excludeStrings)]
 
 # 3. Use PDFkit to convert list of links to PDFs and store on local device
 # set up pdf grabber
