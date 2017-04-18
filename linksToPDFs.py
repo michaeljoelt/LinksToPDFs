@@ -23,7 +23,7 @@ Current version:
 
 Desired changes:
     1. Name PDFs descriptively (ex: 1_ArticleTitle.pdf or 2_PublisherName.pdf) 
-    3. Don't need two lists - everything could be filtered properly in one
+    2. Don't need two lists - everything could be filtered properly in one
     
 '''
 ################################################################################################################################
