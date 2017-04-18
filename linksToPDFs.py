@@ -4,16 +4,16 @@
 '''
 Program:   linksToPDFs
 Pieced together by:    Mike Tjoelker (with help from StackOverflow!)
-Last updated:    18 April 2017
+Last updated:    16 April 2017
 Purpose: 
          This python program is being designed based on the desires of a client running the website www.agentorangegmo.com.
          Client wants all linked sources on her webpage to be saved as PDFs, in case any linked articles are taken offline.
          Client has ~180 linked sourced, and I am too lazy to save them all one by one, so decided to try writing my first
          Python program instead, so it could do it for me.
          
-	 This program will take sites given to it(via local file startSites.txt), find all links referenced on those sites, 
-	 and convert each link(that does not include a string from local file excludeStrings.txt) to a PDF to be stored locally.
-	 Any errors will be printed to screen after all possible PDFs are saved.
+         This program will take sites given to it, find all links referenced on those sites, and convert each link to a PDF
+         to be stored locally. Some pages return errors (are either offline or are not URI friendly for the PDF converter). 
+         These pages will be printed to the screen and will include the error number
          
          Upon running this from Windows cmd, I suggest: python ./linksToPDFs > messages.txt
                                                         (so that printed errors and other information will be put in a text file)
@@ -27,6 +27,20 @@ Desired changes:
     
 '''
 ################################################################################################################################
+'''
+import ssl
+from functools import wraps
+def sslwrap(func):
+    @wraps(func)
+    def bar(*args, **kw):
+        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
+        return func(*args, **kw)
+    return bar
+
+ssl.wrap_socket = sslwrap(ssl.wrap_socket)
+'''
+
+import tldextract
 import pdfkit
 import httplib2
 from bs4 import BeautifulSoup, SoupStrainer
@@ -76,12 +90,23 @@ with open("excludeStrings.txt") as f:
 # Returns: nothing
 # Purpose: takes a site and adds all of its links to foundLinks
 def addLinksToList(site):
+
+	print("im here")
 	http = httplib2.Http()
 	status, response = http.request(site)
+	#status, response = http.request(site,headers={'Connection': 'close'})
+	#status, response = http.request(site,"GET")
+	'''
+	conn = httplib2.Http()
+	status, response = conn.request(site)
+	sock = socket.create_connection((conn.host, conn.port), conn.timeout, conn.source_address)
+	conn.sock = ssl.wrap_socket(sock, conn.key_file, conn.cert_file, ssl_version=ssl.PROTOCOL_TLSv1)
+	conn.request('POST', URL.path + URL.query)
+	'''
 
 	soup = BeautifulSoup(response, "html5lib")
 	
-	for link in soup.find_all('a'):
+	for link in soup.find_all('a',href=True):
 		try:
 			foundLinks.append(link['href']) 
 			'''
@@ -154,14 +179,28 @@ counter = 1
 #print all elements in sourceLinks to PDF
 for elem in sourceLinks:
 	try:
-		kit = pdfkit.from_url(elem,'./PDFs/'+str(counter)+'.pdf',configuration=config)
+		'''
+		r = requests.get(elem)
+		html = bs4.BeautifulSoup(r.text)
+		siteTitle = html.title.text.replace("~!@#$%^&*()_+|`-=\\{}:\"<>?[];',./","")
+		
+		siteTitle=re.findall(r'http://(.*?)bravo',st)
+		replace("~!@#$%^&*()_+|`-=\\{}:\"<>?[];',","")
+		siteTitle=siteTitle.replace("/.","_")
+		siteTitle=siteTitle.remove(")
+		'''
+		siteTitle = tldextract.extract(elem).domain
+		fileName = './PDFs/'+str(counter)+'_'+siteTitle+'.pdf'
+		kit = pdfkit.from_url(elem,fileName,configuration=config)
 		'''
 		success test
 		'''
-		successList.append("PDF SUCCESS: "+str(counter)+") "+elem)
-		counter += 1
+		successList.append("("+str(counter)+") PDF SUCCESS: "+elem)
+		successList.append("   -> for "+fileName)
+		counter += 1		
 	except:
-		errorList.append("PDF ERROR: "+str(counter)+") "+elem)
+		errorList.append("("+str(counter)+") PDF ERROR: "+elem)
+		errorList.append("   -> for "+fileName)
 		counter += 1
 		continue
 
