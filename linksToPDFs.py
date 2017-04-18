@@ -4,16 +4,16 @@
 '''
 Program:   linksToPDFs
 Pieced together by:    Mike Tjoelker (with help from StackOverflow!)
-Last updated:    16 April 2017
+Last updated:    18 April 2017
 Purpose: 
          This python program is being designed based on the desires of a client running the website www.agentorangegmo.com.
          Client wants all linked sources on her webpage to be saved as PDFs, in case any linked articles are taken offline.
          Client has ~180 linked sourced, and I am too lazy to save them all one by one, so decided to try writing my first
          Python program instead, so it could do it for me.
          
-         This program will take sites given to it, find all links referenced on those sites, and convert each link to a PDF
-         to be stored locally. Some pages return errors (are either offline or are not URI friendly for the PDF converter). 
-         These pages will be printed to the screen and will include the error number
+	 This program will take sites given to it(via local file startSites.txt), find all links referenced on those sites, 
+	 and convert each link(that does not include a string from local file excludeStrings.txt) to a PDF to be stored locally.
+	 Any errors will be printed to screen after all possible PDFs are saved.
          
          Upon running this from Windows cmd, I suggest: python ./linksToPDFs > messages.txt
                                                         (so that printed errors and other information will be put in a text file)
@@ -23,12 +23,7 @@ Current version:
 
 Desired changes:
     1. Name PDFs descriptively (ex: 1_ArticleTitle.pdf or 2_PublisherName.pdf) 
-    2. Program should take a text file with a list of web pages on it, that it will gather links from
-       (as of now this is hardcoded in, one link at a time)
     3. Don't need two lists - everything could be filtered properly in one
-    4. Output a list of all sites that could not be reached (so that client knows which sources no longer work)
-    5. Clean up output - maybe put gathered errors into a list to be printed at end - so that it doesn't conflict with
-        output of PDF conversion progress.
     
 '''
 ################################################################################################################################
@@ -37,20 +32,49 @@ import httplib2
 from bs4 import BeautifulSoup, SoupStrainer
 from more_itertools import unique_everseen
 
+
 # INITIALIZE LISTS
-#    -> siteList will contain all links found on the given web pages
-#    -> uniqueList will contain the same links, minus duplicates, ones that 
+#    -> foundLinks will contain all links found on the given web pages
+#    -> sourceLinks will contain the same links, minus duplicates, ones that 
 #       do not start with http, and ones that contain links that stay 
 #       on the same site (I only want to gather PDFs of outside sources)
-siteList = []
-uniqueList = []
+foundLinks = [] # list of all links found on page 
+sourceLinks = [] # list of all links on pages in startSites that are sources
+errorList = [] # list of all errors
+successList = [] # list of successes
+
+startSites = [] # list of sites we want to grab sources from - grab these from local file startSites.txt
+with open("startSites.txt") as f:
+	for line in f:
+		try:
+			startSites.append(line.rstrip('\n'))
+			'''
+			success test
+			'''
+			successList.append("startSites.append SUCCESS: "+line.rstrip('\n'))		
+		except:
+			errorList.append("startSite.append ERROR: "+line.rstrip('\n'))
+			continue
+
+excludeStrings = []  # list of strings we do not want in source links to save as pdfs - grab from local file excludeStrings
+with open("excludeStrings.txt") as f:
+	for line in f:
+		try:
+			excludeStrings.append(line.rstrip('\n')) 
+			'''
+			success test
+			'''
+			successList.append("excludeStrings.append SUCCESS: "+line.rstrip('\n'))	
+		except:
+			excludeStrings.append("excludeStrings.append ERROR: "+line.rstrip('\n'))
+			continue
 
 ###########################################################################
 #                               FUNCTIONS                                 #
 ###########################################################################
 # Function: addLinksToList
 # Returns: nothing
-# Purpose: takes a site and adds all of its links to siteList
+# Purpose: takes a site and adds all of its links to foundLinks
 def addLinksToList(site):
 	http = httplib2.Http()
 	status, response = http.request(site)
@@ -58,9 +82,16 @@ def addLinksToList(site):
 	soup = BeautifulSoup(response, "html5lib")
 	
 	for link in soup.find_all('a'):
-		#if 'href' in getattr(link,'attrs',{}):
-		siteList.extend([link['href']])
-		#siteList.extend(link)
+		try:
+			foundLinks.append(link['href']) 
+			'''
+			success test
+			'''
+			successList.append("foundLinks.append SUCCESS: "+link['href'])	
+
+		except:
+			errorList.append("foundLinks.append ERROR: "+link['href'])
+			continue
 		
 	return
 # End of Function
@@ -74,7 +105,13 @@ def canConnect(site):
 	http = httplib2.Http()
 	try:
 		status, response = http.request(site)
+		'''
+		success test
+		'''
+		successList.append("canConnect SUCCESS: "+site)	
 	except:
+		errorList.append("canConnect ERROR: "+site)
+		errorList.append("   -> Site unreachable and will not become a PDF")		
 		return 0
 	return 1
 # End of Function
@@ -82,31 +119,29 @@ def canConnect(site):
 ###############################################################################
 #                                  MAIN                                       #
 ###############################################################################
-# 1. Grab links from given sites - they will be added to siteList
-# 2. Make uniqueList based on siteList, but removes all duplicate links, 
+# 1. Grab links from given sites - they will be added to foundLinks
+# 2. Make sourceLinks based on foundLinks, but removes all duplicate links, 
 #    links that don't start with 'http', and links containing 'agentorangegmo' 
 # 3. Use PDFkit to convert list of links to PDFs and store on local device
 ###############################################################################
 
-# 1. Grab links from given sites - they will be added to siteList
-addLinksToList('http://agentorangegmo.com/')
-addLinksToList('http://agentorangegmo.com/kids-cancer')	
-addLinksToList('http://agentorangegmo.com/surge-autism')
-addLinksToList('http://agentorangegmo.com/adults-cancer')
-addLinksToList('http://agentorangegmo.com/new-news')
-addLinksToList('http://agentorangegmo.com/24-d-agent-orange-new-gmo-food-ingredient')
-addLinksToList('http://agentorangegmo.com/agent-orange-vietnam-vets')
-addLinksToList('http://agentorangegmo.com/money-matters-kids-matter-more')
-addLinksToList('http://agentorangegmo.com/roundup-everywhere')
-addLinksToList('http://agentorangegmo.com/herbicides-sticking-dinner-snacks')
-addLinksToList('http://agentorangegmo.com/what-you-can-do-your-family-yourself')
-addLinksToList('http://agentorangegmo.com/upcoming-articles')
-addLinksToList('http://agentorangegmo.com/source-links')
+# 1. Grab all links found on webpages in startSites - they will be added to foundLinks
+for site in startSites:
+	try:
+		addLinksToList(site)
+		'''
+		success test
+		'''
+		successList.append("addLinksToList SUCCESS: "+site)	
+	except:
+		errorList.append("addLinksToList ERROR: " + site)
+		errorList.append("   -> Site unreachable and will not be included for gathering source links from")
+		continue
 	
-# 2. Make uniqueList based on siteList, but removes all duplicate links, 
+# 2. Make sourceLinks based on foundLinks, but removes all duplicate links, 
 #    links that don't start with 'http', and links containing 'agentorangegmo' 
-[uniqueList.append(item) for item in siteList if not item in uniqueList and "http" in item and "agentorangegmo" not in item and canConnect(item)]
-
+#[sourceLinks.append(item) for item in foundLinks if not item in sourceLinks and "http" in item and badString not in item and canConnect(item)]
+[sourceLinks.append(item) for item in foundLinks if not item in sourceLinks and "http" in item and not any(badString in item for badString in excludeStrings) and canConnect(item)]
 
 # 3. Use PDFkit to convert list of links to PDFs and store on local device
 # set up pdf grabber
@@ -116,19 +151,46 @@ config = pdfkit.configuration(wkhtmltopdf=path_wkthmltopdf)
 #initialize counter for PDF naming
 counter = 1
 
-#print all elements in uniqueList to PDF
-# TESTING: for elem in ["https://www.nytimes.com/2016/10/30/business/gmo-promise-falls-short.html","https://www.washingtonpost.com/news/speaking-of-science/wp/2016/05/17/ge-crops/?utm_term=.56c580dec09e"]:
-for elem in uniqueList:
+#print all elements in sourceLinks to PDF
+for elem in sourceLinks:
 	try:
-		#print(elem)	
-		item = elem
-		#kit = pdfkit.from_url(elem,'./PDFs/'+str(counter)+'.pdf',options=options,configuration=config)
 		kit = pdfkit.from_url(elem,'./PDFs/'+str(counter)+'.pdf',configuration=config)
+		'''
+		success test
+		'''
+		successList.append("PDF SUCCESS: "+str(counter)+") "+elem)
 		counter += 1
 	except:
-		print(str(counter)+ ") Error: " + elem)
+		errorList.append("PDF ERROR: "+str(counter)+") "+elem)
+		counter += 1
 		continue
-    
+
+
+
+'''	
+#PRINT SUCCESS LIST HERE	
+'''
+print()
+print("**********************************")
+print("*          SUCCESS LIST          *")
+print("**********************************")
+print()
+for sux in successList:
+	print(sux)
+
+		
+'''	
+#PRINT ERROR LIST HERE	
+'''
+print()
+print("**********************************")
+print("*           ERROR LIST           *")
+print("**********************************")
+print()
+for err in errorList:
+	print(err)
+
+	
 ###########################################################################
 #                              END OF PROGRAM                             #
 ###########################################################################
