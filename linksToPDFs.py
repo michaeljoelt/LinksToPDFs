@@ -3,23 +3,24 @@
 ################################################################################################################################
 '''
 Program:   linksToPDFs
-Pieced together by:    Mike Tjoelker (with help from StackOverflow!)
+Pieced together by:    michaeljoelt (with help from StackOverflow!)
 Last updated:    16 April 2017
 Purpose: 
-         This python program is being designed based on the desires of a client running the website www.agentorangegmo.com.
-         Client wants all linked sources on her webpage to be saved as PDFs, in case any linked articles are taken offline.
-         Client has ~180 linked sourced, and I am too lazy to save them all one by one, so decided to try writing my first
-         Python program instead, so it could do it for me.
+         This python program is being designed based on the desires of a client running website www.agentorangegmo.com.
+         Client wanted all linked references on web page to be saved as PDFs, in case the source articles were ever taken offline.
+         Client had ~180 links to external sources, and I did not want to save them one by one. Decided to try writing a program in
+	 python instead that could do it for me.
          
          This program will take sites given to it, find all links referenced on those sites, and convert each link to a PDF
-         to be stored locally. Some pages return errors (are either offline or are not URI friendly for the PDF converter). 
-         These pages will be printed to the screen and will include the error number
+         to be stored locally. Some pages return errors (either offline or not URI friendly for the PDF converter). 
+         These pages will be printed to the screen and will include the error number.
          
          Upon running this from Windows cmd, I suggest: python ./linksToPDFs > messages.txt
                                                         (so that printed errors and other information will be put in a text file)
 
 Current version:
-      16 April 2017  - As of now, code is very sloppy and not general enough (bad reusability for anyone other than me)
+      16 April 2017  - This may need a bit of tinkering to make it more robust for other projects, but it worked well for my needs
+                       and thought it may be helpful to others.
 
 Desired changes:
     1. Name PDFs descriptively (ex: 1_ArticleTitle.pdf or 2_PublisherName.pdf) 
